@@ -1,16 +1,19 @@
 current_directory=$(PWD)
-version=$(git describe)
+tag='0.1.0-pre'
+repo='dathan/docker-diagrams'
+
+.PHONY: build generate-diagrams
 
 build:
-	docker build -t dathan/docker-diagrams:$(version) .
-	docker build -t dathan/docker-diagrams:latest .
+	docker build -t $(repo):$(tag) .
+	docker build -t $(repo):latest .
 
-run:
-	docker run --mount type=bind,src=$(current_directory),dst=/data --rm dathan/docker-diagrams
+generate-diagrams:
+	docker run --mount type=bind,src=$(current_directory),dst=/data --rm $(repo):$(tag)
 
 update-packages: build
-	docker run --mount type=bind,src=$(current_directory),dst=/data --rm dathan/docker-diagrams cp /diagrams/package-lock.json /data/
+	docker run --mount type=bind,src=$(current_directory),dst=/data --rm $(repo):$(tag) cp /diagrams/package-lock.json /data/
 
 publish:
-	docker push dathan/docker-diagrams:$(version)
-	docker push dathan/docker-diagrams:latest
+	docker push $(repo):$(tag)
+	docker push $(repo):latest

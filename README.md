@@ -4,7 +4,7 @@ docker-diagrams
 A Docker appliance to make it easy to use [diagrams](https://github.com/francoislaberge/diagrams) to build
 useful UML diagrams.
 
-To use it, just run `docker run --rm udacity/docker-diagrams` from the directory where your diagram source
+To use it, just run `docker run --rm dathan/docker-diagrams` from the directory where your diagram source
 files exist.
 
 Development
