@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+APP_ROOT = Pathname.new File.expand_path('../../',  __FILE__)
+
+def existing_tags
+  `git tag -l`.split("\n")
+end
+
+def existing_heads
+  `git for-each-ref --format '%(refname)'`.split("\n")
+end
+
+def tree_dirty?
+  `git status --porcelain`.length > 0
+end
+
+def current_branch
+  `git rev-parse --abbrev-ref HEAD`
+end
+
+def wrap_shell
+  ret = yield
+  exit unless $?.exitstatus == 0
+  ret
+end
+
+def develop_up_to_date?
+  develop = wrap_shell { `git rev-parse develop` }
+  origin = wrap_shell { `git rev-parse origin/develop` }
+  develop == origin
+end
+
+def master_up_to_date?
+  master = wrap_shell { `git rev-parse master` }
+  origin = wrap_shell { `git rev-parse origin/master` }
+  master == origin
+end
+
+args = ARGV.clone
+
+tag = args.shift
+release_branch = "release/#{tag}"
+
+raise 'release requires a single argument, which should be a tag name' unless tag
+raise 'Working tree is dirty' if tree_dirty?
+raise 'Release branch already exists' if existing_heads.include? "refs/heads/#{release_branch}"
+puts "Fetching master and develop from origin to make sure we're up to date"
+wrap_shell { `git fetch origin develop master --tags` }
+raise "#{tag} already exists in this repository" if existing_tags.include? tag
+raise 'Develop is not up to date with origin/develop' unless develop_up_to_date?
+raise 'Master is not up to date with origin/master' unless master_up_to_date?
+
+puts "Are you sure you want to release #{tag}? (Y/n)"
+exit unless STDIN.gets.chomp =~ /^(Y|y)/
+
+wrap_shell { `git checkout develop` }
+wrap_shell { `git branch #{release_branch}` }
+wrap_shell { `git checkout master` }
+wrap_shell { system "git merge --no-ff --log=1000 #{release_branch}" }
+wrap_shell { `git tag -a -m "$(git log -1 --pretty=%B)" #{tag}` }
+wrap_shell { `git push origin master #{tag}` }
+wrap_shell { `git checkout develop` }
+wrap_shell { `git merge master --no-ff -m "Merge master back into develop following release #{tag}"`}
+wrap_shell { `git push origin develop` }

@@ -1,6 +1,6 @@
 {
   "name": "diagrams-docker",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Package https://www.npmjs.com/package/diagrams into Docker to make generating diagrams zero-dependency and easy",
   "main": "src/run.js",
   "dependencies": {

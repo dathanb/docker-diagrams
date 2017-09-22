@@ -1,5 +1,5 @@
 current_directory=$(PWD)
-tag='0.1.0-pre'
+tag=$(shell git describe)
 repo='dathan/docker-diagrams'
 
 .PHONY: build generate-diagrams
